@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: 'postgres:18'
+    environment:
+      - 'POSTGRES_DB=library'
+      - 'POSTGRES_USER=library'
+      - 'POSTGRES_PASSWORD=library'
+    ports:
+      - '5432:5432'          # expose the DB on localhost so psql can reach it
+    volumes:
+      - 'library-data:/var/lib/postgresql'   # persist data across restarts
+
+volumes:
+  library-data:

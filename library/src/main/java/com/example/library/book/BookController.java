@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,9 +24,9 @@ public class BookController {
         this.books = books;
     }
 
-    @GetMapping                                 // GET /api/books
-    public List<Book> all() {
-        return books.findAll();
+    @GetMapping                                          // GET /api/books  or  /api/books?author=...
+    public List<Book> all(@RequestParam(required = false) String author) {
+        return books.findAll(author);                    // books = the BookService
     }
 
     @GetMapping("/{id}")                        // GET /api/books/{id}
@@ -38,7 +39,7 @@ public class BookController {
     @PostMapping                                // POST /api/books
     public ResponseEntity<Book> create(@RequestBody Book incoming) {
         Book saved = books.create(incoming);
-        URI location = URI.create("/api/books/" + saved.id());
+        URI location = URI.create("/api/books/" + saved.getId());   // was saved.id()
         return ResponseEntity.created(location).body(saved);
     }
 
