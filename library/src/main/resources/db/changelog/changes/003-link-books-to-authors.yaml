@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 003-link-books-to-authors
+      author: roman
+      changes:
+        # 1. Expand: a many-to-many can't live as a column in either table, so it gets its own.
+        - createTable:
+            tableName: book_author
+            columns:
+              - column:
+                  name: book_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+              - column:
+                  name: author_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+        # One row per (book, author) pair - the pair itself is the key, so no duplicates.
+        - addPrimaryKey:
+            tableName: book_author
+            columnNames: book_id, author_id
+            constraintName: pk_book_author
+        - addForeignKeyConstraint:
+            baseTableName: book_author
+            baseColumnNames: book_id
+            constraintName: fk_book_author_book
+            referencedTableName: book
+            referencedColumnNames: id
+        - addForeignKeyConstraint:
+            baseTableName: book_author
+            baseColumnNames: author_id
+            constraintName: fk_book_author_author
+            referencedTableName: author
+            referencedColumnNames: id
+        # 2. Migrate: carry the existing data across. Each distinct author text becomes
+        #    an author row; each book gets a join row pointing at its author.
+        - sql:
+            sql: |
+              INSERT INTO author (id, name)
+              SELECT uuidv7(), author FROM book WHERE author IS NOT NULL GROUP BY author;
+              INSERT INTO book_author (book_id, author_id)
+              SELECT b.id, a.id FROM book b JOIN author a ON a.name = b.author;
+        # 3. Contract: only now, with nothing left in it that isn't also in the join table,
+        #    is the free-text column safe to drop.
+        - dropColumn:
+            tableName: book
+            columnName: author

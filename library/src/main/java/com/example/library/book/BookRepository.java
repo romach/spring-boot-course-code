@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BookRepository extends JpaRepository<Book, UUID> {
 
-    // A derived query: Spring Data reads the method NAME and writes the SQL.
-    List<Book> findByAuthor(String author);
+    // Traverses the collection: WHERE any of the book's authors has this id
+    List<Book> findByAuthorsId(UUID authorId);
 }

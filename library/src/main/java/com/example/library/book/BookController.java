@@ -24,30 +24,32 @@ public class BookController {
         this.books = books;
     }
 
-    @GetMapping                                          // GET /api/books  or  /api/books?author=...
-    public List<Book> all(@RequestParam(required = false) String author) {
-        return books.findAll(author);                    // books = the BookService
+    @GetMapping                                          // GET /api/books  or  ?authorId=...
+    public List<BookResponse> all(@RequestParam(required = false) UUID authorId) {
+        return books.findAll(authorId).stream().map(BookResponse::from).toList();
     }
 
-    @GetMapping("/{id}")                        // GET /api/books/{id}
-    public ResponseEntity<Book> byId(@PathVariable UUID id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<BookResponse> byId(@PathVariable UUID id) {
         return books.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+            .map(BookResponse::from)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping                                // POST /api/books
-    public ResponseEntity<Book> create(@RequestBody Book incoming) {
-        Book saved = books.create(incoming);
-        URI location = URI.create("/api/books/" + saved.getId());   // was saved.id()
-        return ResponseEntity.created(location).body(saved);
+    @PostMapping                                         // POST /api/books
+    public ResponseEntity<BookResponse> create(@RequestBody CreateBookRequest req) {
+        Book saved = books.create(req.title(), req.year(), req.authorIds());
+        URI location = URI.create("/api/books/" + saved.getId());
+        return ResponseEntity.created(location).body(BookResponse.from(saved));
     }
 
-    @PutMapping("/{id}")                        // PUT /api/books/{id}
-    public ResponseEntity<Book> replace(@PathVariable UUID id, @RequestBody Book incoming) {
-        return books.replace(id, incoming)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    @PutMapping("/{id}")                                 // PUT /api/books/{id}
+    public ResponseEntity<BookResponse> replace(@PathVariable UUID id, @RequestBody CreateBookRequest req) {
+        return books.replace(id, req.title(), req.year(), req.authorIds())
+            .map(BookResponse::from)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")                     // DELETE /api/books/{id}

@@ -1,9 +1,16 @@
 package com.example.library.book;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
+import com.example.library.author.Author;
 import com.github.f4b6a3.uuid.UuidCreator;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -22,14 +29,20 @@ public class Book {
     private UUID id = UuidCreator.getTimeOrderedEpoch();   // a fresh UUIDv7, set at construction
 
     private String title;
-    private String author;
     private int year;
 
-    // App-facing constructor: supply the data; the id defaults to a new UUIDv7 above
-    // (a default, not a lock - @Setter gives you setId(...) for when a caller must pin it).
-    public Book(String title, String author, int year) {
+    // The relationship gets its own table. This side declares it, so this side writes its rows.
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "book_author",
+        joinColumns = @JoinColumn(name = "book_id"),
+        inverseJoinColumns = @JoinColumn(name = "author_id"))
+    private Set<Author> authors = new HashSet<>();
+
+    // A book always comes with its authors: there is no way to build one without saying who wrote it.
+    public Book(String title, int year, Set<Author> authors) {   // was Book(String title, String author, int year)
         this.title = title;
-        this.author = author;
         this.year = year;
+        this.authors.addAll(authors);   // copy in - never keep the caller's set
     }
 }
