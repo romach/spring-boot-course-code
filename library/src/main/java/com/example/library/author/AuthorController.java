@@ -3,6 +3,8 @@ package com.example.library.author;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,32 +32,25 @@ public class AuthorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AuthorResponse> byId(@PathVariable UUID id) {
-        return authors.findById(id)
-            .map(AuthorResponse::from)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public AuthorResponse byId(@PathVariable UUID id) {
+        return AuthorResponse.from(authors.getById(id));
     }
 
     @PostMapping
-    public ResponseEntity<AuthorResponse> create(@RequestBody CreateAuthorRequest req) {
+    public ResponseEntity<AuthorResponse> create(@Valid @RequestBody CreateAuthorRequest req) {
         Author saved = authors.create(req.name());
         URI location = URI.create("/api/authors/" + saved.getId());
         return ResponseEntity.created(location).body(AuthorResponse.from(saved));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<AuthorResponse> replace(@PathVariable UUID id, @RequestBody CreateAuthorRequest req) {
-        return authors.replace(id, req.name())
-            .map(AuthorResponse::from)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public AuthorResponse replace(@PathVariable UUID id, @Valid @RequestBody CreateAuthorRequest req) {
+        return AuthorResponse.from(authors.replace(id, req.name()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        return authors.delete(id)
-            ? ResponseEntity.noContent().build()
-            : ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)               // 204 on success
+    public void delete(@PathVariable UUID id) {
+        authors.delete(id);                              // NotFoundException -> 404, ConflictException -> 409
     }
 }

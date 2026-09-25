@@ -1,3 +1,5 @@
 package com.example.library.author;
 
-public record CreateAuthorRequest(String name) {}
+import jakarta.validation.constraints.NotBlank;
+
+public record CreateAuthorRequest(@NotBlank String name) {}

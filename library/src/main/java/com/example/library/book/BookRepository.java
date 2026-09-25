@@ -8,4 +8,7 @@ public interface BookRepository extends JpaRepository<Book, UUID> {
 
     // Traverses the collection: WHERE any of the book's authors has this id
     List<Book> findByAuthorsId(UUID authorId);
+
+    // Is any book still linked to this author? (Spring Data derives an EXISTS query.)
+    boolean existsByAuthorsId(UUID authorId);
 }

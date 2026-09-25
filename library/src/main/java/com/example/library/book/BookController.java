@@ -3,6 +3,8 @@ package com.example.library.book;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -30,32 +33,25 @@ public class BookController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<BookResponse> byId(@PathVariable UUID id) {
-        return books.findById(id)
-            .map(BookResponse::from)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public BookResponse byId(@PathVariable UUID id) {
+        return BookResponse.from(books.getById(id));
     }
 
     @PostMapping                                         // POST /api/books
-    public ResponseEntity<BookResponse> create(@RequestBody CreateBookRequest req) {
+    public ResponseEntity<BookResponse> create(@Valid @RequestBody CreateBookRequest req) {
         Book saved = books.create(req.title(), req.year(), req.authorIds());
         URI location = URI.create("/api/books/" + saved.getId());
         return ResponseEntity.created(location).body(BookResponse.from(saved));
     }
 
     @PutMapping("/{id}")                                 // PUT /api/books/{id}
-    public ResponseEntity<BookResponse> replace(@PathVariable UUID id, @RequestBody CreateBookRequest req) {
-        return books.replace(id, req.title(), req.year(), req.authorIds())
-            .map(BookResponse::from)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public BookResponse replace(@PathVariable UUID id, @Valid @RequestBody CreateBookRequest req) {
+        return BookResponse.from(books.replace(id, req.title(), req.year(), req.authorIds()));
     }
 
-    @DeleteMapping("/{id}")                     // DELETE /api/books/{id}
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
-        return books.delete(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+    @DeleteMapping("/{id}")                              // DELETE /api/books/{id}
+    @ResponseStatus(HttpStatus.NO_CONTENT)               // 204 on success
+    public void delete(@PathVariable UUID id) {
+        books.delete(id);                                // throws NotFoundException -> 404
     }
 }

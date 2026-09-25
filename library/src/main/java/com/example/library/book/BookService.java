@@ -2,12 +2,11 @@ package com.example.library.book;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import com.example.library.author.Author;
 import com.example.library.author.AuthorRepository;
+import com.example.library.error.NotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,8 +24,10 @@ public class BookService {
         return (authorId == null) ? books.findAll() : books.findByAuthorsId(authorId);
     }
 
-    public Optional<Book> findById(UUID id) {
-        return books.findById(id);
+    // Replaces findById: the service now decides "not found" and throws instead of returning an Optional.
+    public Book getById(UUID id) {
+        return books.findById(id)
+            .orElseThrow(() -> new NotFoundException("No book with id " + id));
     }
 
     public Book create(String title, int year, Set<UUID> authorIds) {
@@ -34,21 +35,20 @@ public class BookService {
         return books.save(book);
     }
 
-    public Optional<Book> replace(UUID id, String title, int year, Set<UUID> authorIds) {
+    public Book replace(UUID id, String title, int year, Set<UUID> authorIds) {
         if (!books.existsById(id)) {
-            return Optional.empty();
+            throw new NotFoundException("No book with id " + id);
         }
         Book book = new Book(title, year, requireAuthors(authorIds));
-        book.setId(id);                                // pin the path id, then upsert
-        return Optional.of(books.save(book));
+        book.setId(id);
+        return books.save(book);
     }
 
-    public boolean delete(UUID id) {
+    public void delete(UUID id) {
         if (!books.existsById(id)) {
-            return false;
+            throw new NotFoundException("No book with id " + id);
         }
         books.deleteById(id);
-        return true;
     }
 
     // Every id must resolve to a real author, or the book isn't created at all.
@@ -57,7 +57,7 @@ public class BookService {
         if (found.size() != authorIds.size()) {
             Set<UUID> missing = new HashSet<>(authorIds);
             found.forEach(a -> missing.remove(a.getId()));
-            throw new NoSuchElementException("No author with id " + missing);
+            throw new NotFoundException("No author with id " + missing);
         }
         return new HashSet<>(found);
     }
