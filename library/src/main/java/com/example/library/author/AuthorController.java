@@ -1,9 +1,12 @@
 package com.example.library.author;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 import jakarta.validation.Valid;
+import com.example.library.util.Pageables;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,9 +29,9 @@ public class AuthorController {
         this.authors = authors;
     }
 
-    @GetMapping
-    public List<AuthorResponse> all() {
-        return authors.findAll().stream().map(AuthorResponse::from).toList();
+    @GetMapping                                          // GET /api/authors?page=0&size=20&sort=name
+    public Page<AuthorResponse> all(@PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return authors.findAll(Pageables.withIdTiebreaker(pageable)).map(AuthorResponse::from);
     }
 
     @GetMapping("/{id}")

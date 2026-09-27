@@ -1,10 +1,11 @@
 package com.example.library.author;
 
-import java.util.List;
 import java.util.UUID;
 import com.example.library.book.BookRepository;
 import com.example.library.error.ConflictException;
 import com.example.library.error.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,8 +19,8 @@ public class AuthorService {
         this.books = books;
     }
 
-    public List<Author> findAll() {
-        return authors.findAll();
+    public Page<Author> findAll(Pageable pageable) {
+        return authors.findAll(pageable);                    // inherited from JpaRepository
     }
 
     public Author getById(UUID id) {

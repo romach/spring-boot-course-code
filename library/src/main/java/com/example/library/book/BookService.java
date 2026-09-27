@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.example.library.author.Author;
 import com.example.library.author.AuthorRepository;
 import com.example.library.error.NotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,8 +22,10 @@ public class BookService {
         this.authors = authors;
     }
 
-    public List<Book> findAll(UUID authorId) {
-        return (authorId == null) ? books.findAll() : books.findByAuthorsId(authorId);
+    public Page<Book> findAll(UUID authorId, Pageable pageable) {
+        return (authorId == null)
+            ? books.findAll(pageable)                         // inherited from JpaRepository
+            : books.findByAuthorsId(authorId, pageable);      // our derived query, now paged
     }
 
     // Replaces findById: the service now decides "not found" and throws instead of returning an Optional.
