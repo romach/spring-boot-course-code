@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/books")
-public class BookController {
+public class BookController implements BookApi {
 
     private final BookService books;
 
@@ -30,6 +30,7 @@ public class BookController {
         this.books = books;
     }
 
+    @Override
     @GetMapping                                          // GET /api/books?authorId=...&page=0&size=20&sort=title
     public Page<BookResponse> all(
             @RequestParam(required = false) UUID authorId,
@@ -37,11 +38,13 @@ public class BookController {
         return books.findAll(authorId, Pageables.withIdTiebreaker(pageable)).map(BookResponse::from);
     }
 
+    @Override
     @GetMapping("/{id}")
     public BookResponse byId(@PathVariable UUID id) {
         return BookResponse.from(books.getById(id));
     }
 
+    @Override
     @PostMapping                                         // POST /api/books
     public ResponseEntity<BookResponse> create(@Valid @RequestBody CreateBookRequest req) {
         Book saved = books.create(req.title(), req.year(), req.authorIds());
@@ -49,11 +52,13 @@ public class BookController {
         return ResponseEntity.created(location).body(BookResponse.from(saved));
     }
 
+    @Override
     @PutMapping("/{id}")                                 // PUT /api/books/{id}
     public BookResponse replace(@PathVariable UUID id, @Valid @RequestBody CreateBookRequest req) {
         return BookResponse.from(books.replace(id, req.title(), req.year(), req.authorIds()));
     }
 
+    @Override
     @DeleteMapping("/{id}")                              // DELETE /api/books/{id}
     @ResponseStatus(HttpStatus.NO_CONTENT)               // 204 on success
     public void delete(@PathVariable UUID id) {

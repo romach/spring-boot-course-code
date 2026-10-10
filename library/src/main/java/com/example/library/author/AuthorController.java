@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/authors")
-public class AuthorController {
+public class AuthorController implements AuthorApi {
 
     private final AuthorService authors;
 
@@ -29,16 +29,19 @@ public class AuthorController {
         this.authors = authors;
     }
 
+    @Override
     @GetMapping                                          // GET /api/authors?page=0&size=20&sort=name
     public Page<AuthorResponse> all(@PageableDefault(size = 20, sort = "name") Pageable pageable) {
         return authors.findAll(Pageables.withIdTiebreaker(pageable)).map(AuthorResponse::from);
     }
 
+    @Override
     @GetMapping("/{id}")
     public AuthorResponse byId(@PathVariable UUID id) {
         return AuthorResponse.from(authors.getById(id));
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<AuthorResponse> create(@Valid @RequestBody CreateAuthorRequest req) {
         Author saved = authors.create(req.name());
@@ -46,11 +49,13 @@ public class AuthorController {
         return ResponseEntity.created(location).body(AuthorResponse.from(saved));
     }
 
+    @Override
     @PutMapping("/{id}")
     public AuthorResponse replace(@PathVariable UUID id, @Valid @RequestBody CreateAuthorRequest req) {
         return AuthorResponse.from(authors.replace(id, req.name()));
     }
 
+    @Override
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)               // 204 on success
     public void delete(@PathVariable UUID id) {

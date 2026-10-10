@@ -82,6 +82,13 @@
 			<version>6.0.0</version>  <!-- or the latest on Maven Central -->
 		</dependency>
 
+		<!-- springdoc-openapi: generates the OpenAPI spec from the controllers, serves it with Scalar -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-scalar</artifactId>
+			<version>3.1.1</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
