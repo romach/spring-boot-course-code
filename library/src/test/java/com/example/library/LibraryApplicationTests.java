@@ -1,15 +1,11 @@
 package com.example.library;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;      // new
 
 @SpringBootTest
-@Disabled("Needs a test database; wired up with Testcontainers in the testing lesson.")
+@Import(TestcontainersConfiguration.class)                 // new: the whole app needs a database
 class LibraryApplicationTests {
-
-	@Test
-	void contextLoads() {
-	}
-
+    @Test void contextLoads() { }
 }
